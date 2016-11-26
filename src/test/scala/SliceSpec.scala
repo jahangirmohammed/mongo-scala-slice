@@ -2,7 +2,7 @@ import Helpers._
 import org.mongodb.scala._
 import org.mongodb.scala.bson.collection.immutable.Document
 import org.mongodb.scala.model.Aggregates._
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfter, FlatSpec, Matchers}
+import org.scalatest._
 import scala.concurrent._
 /**
   * Created by jahangir on 11/26/16.
@@ -37,7 +37,7 @@ object Helpers {
 
 }
 
-class SliceSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
+class SliceSpec extends FunSpec with Matchers with BeforeAndAfterAll{
 
   import org.mongodb.scala.model.Projections._
 
@@ -68,42 +68,46 @@ class SliceSpec extends FlatSpec with Matchers with BeforeAndAfterAll{
 
   }
 
-  "Mongo Scala Driver" should "work with include and exclude projection" in {
-    val testIncludeQuery = testCollection.aggregate(
-      List(
-        `match`(filterBson),
-        project(fields(org.mongodb.scala.model.Projections.include("name", "type"), excludeId()))
-      )
-    )
-    testIncludeQuery.printResults()
-    testIncludeQuery.headResult() shouldBe a[Document]
-  }
+  describe("Mongo Scala Driver") {
+    describe("projections") {
+      it("Include Query should result in Document") {
+        val testIncludeQuery = testCollection.aggregate(
+          List(
+            `match`(filterBson),
+            project(fields(org.mongodb.scala.model.Projections.include("name", "type"), excludeId()))
+          )
+        )
+        testIncludeQuery.printResults()
+        testIncludeQuery.headResult() shouldBe a[Document]
+      }
 
-  it should "work for slice query with limit" in {
-    val testSliceQuery = testCollection.aggregate(
-      List(
-        `match`(filterBson),
-        project(fields(org.mongodb.scala.model.Projections.include("name", "type"), excludeId(), slice("comments",6)))
-      )
-    )
-    testSliceQuery.printResults()
-    testSliceQuery.headResult() shouldBe a[Document]
-  }
+      it("Slice Query with limit should result in Document") {
+        val testSliceQuery = testCollection.aggregate(
+          List(
+            `match`(filterBson),
+            project(fields(org.mongodb.scala.model.Projections.include("name", "type"), excludeId(), slice("comments",6)))
+          )
+        )
+        testSliceQuery.printResults()
+        testSliceQuery.headResult() shouldBe a[Document]
+      }
 
+      it("Slice Query with skip and limit should result in Document") {
+        val testSliceQuery = testCollection.aggregate(
+          List(
+            `match`(filterBson),
+            project(fields(org.mongodb.scala.model.Projections.include("name", "type"), excludeId(), slice("comments",1,3)))
+          )
+        )
 
-  it should "work for slice query with skip and limit" in {
-    val testSliceQuery = testCollection.aggregate(
-      List(
-        `match`(filterBson),
-         project(fields(org.mongodb.scala.model.Projections.include("name", "type"), excludeId(), slice("comments",1,3)))
-      )
-    )
-
-    testSliceQuery.printResults()
-    testSliceQuery.headResult() shouldBe a[Document]
+        testSliceQuery.printResults()
+        testSliceQuery.headResult() shouldBe a[Document]
+      }
+    }
   }
 
   override def afterAll() {
     testCollection.drop().results()
   }
+
 }
